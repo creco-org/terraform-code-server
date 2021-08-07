@@ -34,41 +34,22 @@ resource "aws_instance" "code_server" {
   tags = {
     Name = "terraform-code-server"
   }
-  key_name = aws_key_pair.code_server.key_name
-  provisioner "file" {
-    source      = "./code-server.sh"
-    destination = "/tmp/code-server.sh"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "export password=${var.password}",
-      "chmod +x /tmp/code-server.sh",
-      "sudo /tmp/code-server.sh",
-    ]
-  }
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    password    = ""
-    private_key = file(var.key_pair_filename)
-    host        = self.public_ip
-  }
+  user_data = data.template_file.user_data.rendered
 }
 
-resource "aws_key_pair" "code_server" {
-  key_name   = var.key_pair_name
-  public_key = var.key_pair_public_key
-}
 variable "service_ports" {
   default = [22, 8443, 80, 8080]
 }
 output "welcome_to_code_server" {
   value = "http://${aws_instance.code_server.public_ip}"
 }
-variable "password" {}
-variable "key_pair_name" {}
-variable "key_pair_filename" {}
-variable "key_pair_public_key" {}
 variable "region" {
   default = "ap-northeast-2"
+}
+variable "password" {}
+data "template_file" "user_data" {
+  template = file("code-server.sh")
+  vars = {
+    password = var.password
+  }
 }
