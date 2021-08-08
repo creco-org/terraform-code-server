@@ -48,7 +48,7 @@ variable "region" {
 }
 variable "password" {}
 data "template_file" "user_data" {
-  template = file("code-server.sh")
+  template = file("install.sh")
   vars = {
     password = var.password
   }
